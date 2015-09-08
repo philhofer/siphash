@@ -17,12 +17,12 @@
 	RORQ $32, v2
 
 // blocks(d *digest, data []uint8)
-TEXT ·blocks(SB),4,$0-40
-	MOVQ d+0(FP), CX
-	MOVQ 0(CX), R9		// R9 = v0
-	MOVQ 8(CX), R10		// R10 = v1
-	MOVQ 16(CX), R11	// R11 = v2
-	MOVQ 24(CX), R12	// R12 = v3
+TEXT ·blocks(SB),4,$0-32
+	MOVQ d+0(FP), BX
+	MOVQ 0(BX), R9		// R9 = v0
+	MOVQ 8(BX), R10		// R10 = v1
+	MOVQ 16(BX), R11	// R11 = v2
+	MOVQ 24(BX), R12	// R12 = v3
 	MOVQ data+8(FP), DI	// DI = *uint64
 	MOVQ data_len+16(FP), SI// SI = nblocks
 	XORL DX, DX		// DX = index (0)
@@ -37,16 +37,17 @@ body:
 	XORQ CX, R9
 	ADDQ $1, DX
 	JMP  body
-end:
-	MOVQ d+0(FP), CX
-	MOVQ R9, 0(CX)
-	MOVQ R10, 8(CX)
-	MOVQ R11, 16(CX)
-	MOVQ R12, 24(CX)
+end:	
+	MOVQ R9, 0(BX)
+	MOVQ R10, 8(BX)
+	MOVQ R11, 16(BX)
+	MOVQ R12, 24(BX)
 	RET
 
 // This is a translation of the gcc output of FloodyBerry's pure-C public
-// domain siphash implementation at https://github.com/floodyberry/siphash	
+// domain siphash implementation at https://github.com/floodyberry/siphash
+	
+>>>>>>> assembly block impl
 // func Hash(k0, k1 uint64, b []byte) uint64
 TEXT	·Hash(SB),4,$0-48
 	MOVQ	k0+0(FP),CX
