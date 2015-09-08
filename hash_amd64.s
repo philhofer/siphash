@@ -1,8 +1,53 @@
 // +build amd64,!appengine,!gccgo
 
+#define ROUND(v0, v1, v2, v3) \
+	ADDQ v1, v0; \
+	ADDQ v3, v2; \
+	RORQ $51, v1; \
+	XORQ v0, v1; \
+	RORQ $32, v0; \
+	RORQ $48, v3; \
+	XORQ v2, v3; \
+	ADDQ v3, v0; \
+	RORQ $43, v3; \
+	XORQ v0, v3; \
+	ADDQ v1, v2; \
+	RORQ $47, v1; \
+	XORQ v2, v1; \
+	RORQ $32, v2
+
+// blocks(d *digest, data []uint8)
+TEXT ·blocks(SB),4,$0-40
+	MOVQ d+0(FP), CX
+	MOVQ 0(CX), R9		// R9 = v0
+	MOVQ 8(CX), R10		// R10 = v1
+	MOVQ 16(CX), R11	// R11 = v2
+	MOVQ 24(CX), R12	// R12 = v3
+	MOVQ data+8(FP), DI	// DI = *uint64
+	MOVQ data_len+16(FP), SI// SI = nblocks
+	XORL DX, DX		// DX = index (0)
+	SHRQ $3, SI 		// SI /= 8
+body:
+	CMPQ DX, SI
+	JGE  end
+	MOVQ 0(DI)(DX*8), CX	// CX = m
+	XORQ CX, R12
+	ROUND(R9, R10, R11, R12)
+	ROUND(R9, R10, R11, R12)
+	XORQ CX, R9
+	ADDQ $1, DX
+	JMP  body
+end:
+	MOVQ d+0(FP), CX
+	MOVQ R9, 0(CX)
+	MOVQ R10, 8(CX)
+	MOVQ R11, 16(CX)
+	MOVQ R12, 24(CX)
+	RET
+
 // This is a translation of the gcc output of FloodyBerry's pure-C public
 // domain siphash implementation at https://github.com/floodyberry/siphash
-
+	
 // func Hash(k0, k1 uint64, b []byte) uint64
 TEXT	·Hash(SB),4,$0-48
 	MOVQ	k0+0(FP),CX
