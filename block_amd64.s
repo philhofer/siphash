@@ -43,3 +43,30 @@ end:
 	MOVQ R11, 16(BX)
 	MOVQ R12, 24(BX)
 	RET
+
+// finalize(d *digest) uint64
+TEXT ·finalize(SB),4,$0-16
+	MOVQ d+0(FP), CX
+	MOVQ 0(CX), R9		// R9 = v0
+	MOVQ 8(CX), R10		// R10 = v1
+	MOVQ 16(CX), R11	// R11 = v2
+	MOVQ 24(CX), R12	// R12 = v3
+	MOVQ 48(CX), CX 	// CX = x
+
+	// perform block with d.x[:]
+	XORQ CX, R12
+	ROUND(R9, R10, R11, R12)
+	ROUND(R9, R10, R11, R12)
+	XORQ CX, R9
+
+	// 4 finalization rounds
+	XORQ $0xff, R11
+	ROUND(R9, R10, R11, R12)
+	ROUND(R9, R10, R11, R12)
+	ROUND(R9, R10, R11, R12)
+	ROUND(R9, R10, R11, R12)
+	XORQ R10, R9
+	XORQ R12, R11
+	XORQ R11, R9
+	MOVQ R9, ret+8(FP)
+	RET
